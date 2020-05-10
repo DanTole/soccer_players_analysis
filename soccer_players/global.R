@@ -2,10 +2,14 @@ library(shiny)
 library(dplyr)
 library(shinydashboard)
 library(shinydashboardPlus)
+library(lubridate)
 library(ggplot2)
 library(DT)
-require(maps)
-require(viridis)
+library(maps)
+library(viridis)
+library(leaflet)
+library(sf)
+library(kableExtra)
 theme_set(
   theme_void()
 )
@@ -38,7 +42,8 @@ values_df = values_df %>%
 # -----------------------------------------------------
 clean_date_str <- function(date)
 {
-  return(lubridate::parse_date_time(date, orders = c("dmy", "mdy")))
+  return(lubridate::parse_date_time(date, orders = c("dmy", "mdy", "ymd", "ydm")))
+  # return(lubridate::dmy(date))
 }
 
 fmt_df_dates <- function(df)
@@ -76,33 +81,59 @@ df = fm_df %>%
 countries = read.delim('/home/dantole/Desktop/NYCDSA/Project_2/soccer/countries.txt', header = FALSE, col.names = c('NationID', 'Country'), sep = ',', stringsAsFactors = FALSE)
 
 # Tranform nationID format to couontry name
-fmt_df_country <- function(nationId)
-{
-  countries[countries$key == nationId, 2]
-}
-
 df = df %>% left_join(., countries, by="NationID")
 
 df = df %>% select(., -NationID)
 
+# Adding age (as of 01/01/2017) feature
+date_ref = dmy("01/01/2017")
+
+df = df %>% mutate(., Age = floor(as.numeric(as.duration(interval(start = Birth.Date, end = date_ref)))/(3600*24*365)))
+
+# Not so lazy categorization of attributes (by hand)
+Physical = c('AerialAbility', 'Heading', 'Acceleration', 'Jumping', 'NaturalFitness', 'Pace', 'Stamina', 'Strength', 'InjuryProness')
+Technical = c('Corners', 'Crossing', 'Passing', 'Balance', 'Dribbling', 'FirstTouch', 'Technique', 'Agility')
+Shooting = c('Finishing', 'LongShots', 'PenaltyTaking', 'Freekicks')
+Other = c('Longthrows', 'RightFoot', 'LeftFoot', 'Dirtiness')
+Defense = c('Marking', 'Tackling', 'Aggression', 'Anticipation')
+Mental = c('Bravery', 'Composure', 'Concentration', 'Determination', 'Flair', 'Leadership', 'ImportantMatches', 'Consistency')
+Tactical = c('Vision', 'Decisions', 'CommandOfArea', 'OffTheBall', 'Positioning', 'Teamwork', 'Workrate')
+Personality = c('Versatility', 'Adaptability', 'Ambition', 'Loyalty', 'Pressure', 'Professional', 'Sportsmanship', 'Temperament', 'Controversy')
+Goal = c('Communication', 'Eccentricity', 'Handling', 'Kicking', 'OneOnOnes', 'Reflexes', 'RushingOut', 'TendencyToPunch', 'Throwing')
+Positioning = c('Goalkeeper', 'Sweeper', 'Striker', 'AttackingMidCentral', 'AttackingMidLeft', 'AttackingMidRight', 'DefenderCentral', 'DefenderLeft', 'DefenderRight', 'DefensiveMidfielder', 'MidfielderCentral', 'MidfielderLeft', 'MidfielderRight', 'WingBackLeft', 'WingBackRight')
+
+Categories = list(Physical, Technical, Shooting, Other, Defense, Mental, Tactical, Personality, Goal)
+
+names(Categories) = c('Physical', 'Technical', 'Shooting', 'Other', 'Defense', 'Mental', 'Tactical', 'Personality', 'Goal')
+
+df = df %>% mutate(., Physical = floor(rowMeans(df[Physical])),
+                   Technical = floor(rowMeans(df[Technical])),
+                   Shooting = floor(rowMeans(df[Shooting])),
+                   Defense = floor(rowMeans(df[Defense])),
+                   Mental = floor(rowMeans(df[Mental])),
+                   Tactical = floor(rowMeans(df[Tactical])),
+                   Personality = floor(rowMeans(df[Personality])),
+                   Other = floor(rowMeans(df[Other])))
+
 # -----------------------------------------------------
 
-# Retrievethe map data
-# some.eu.maps <- map_data("world", region = countries$country)
-
-# Compute the centroid as the mean longitude and lattitude
-# Used as label coordinate for country's names
-
+# # Retrievethe map data
+#  some.eu.maps <- map_data("world", region = countries$country)
+# 
+# # Compute the centroid as the mean longitude and lattitude
+# # Used as label coordinate for country's names
+# 
 # region.lab.data <- some.eu.maps %>%
-#   group_by(region) %>%
-#   summarise(long = mean(long), lat = mean(lat))
+#    group_by(region) %>%
+#    summarise(long = mean(long), lat = mean(lat))
 # 
 # ggplot(some.eu.maps, aes(x = long, y = lat)) +
-#   geom_polygon(aes( group = group, fill = region))+
-#   geom_text(aes(label = region), data = region.lab.data,  size = 3, hjust = 0.5)+
-#   scale_fill_viridis_d()+
-#   theme_void()+
-#   theme(legend.position = "none")
+#    geom_polygon(aes( group = group, fill = region))+
+#    geom_text(aes(label = region), data = region.lab.data,  size = 3, hjust = 0.5)+
+#    scale_fill_viridis_d()+
+#    theme_void()+
+#    theme(legend.position = "none")
+
 # -----------------------------------------------------
 
 # df %>% filter(., !is.na(Market.Value..Euros.))

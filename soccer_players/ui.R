@@ -1,10 +1,7 @@
 
-
-
-
 # --------------------------------------------------------------------------------
 
-ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPagePlus(
+ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboardPagePlus(
     header = dashboardHeaderPlus(
         enable_rightsidebar = TRUE,
         rightSidebarIcon = "gears"
@@ -16,9 +13,9 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
             sidebarUserPanel(
                 "Dan Toledano"
             ),
-            menuItem("Map", tabName = "map", icon = icon("map")),
-            menuItem("Players", tabName = "players", icon = icon("table")),
-            menuItem("Dad jokes")
+            menuItem("Player", tabName = "Player", icon = icon("map")),
+            menuItem("Search", tabName = "search", icon = icon("table")),
+            menuItem("")
         )
     ), # end left side bar
     
@@ -37,19 +34,32 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
                            "Nationality",
                            choices = c('Choose a country' = 'a', unique(df %>% arrange(., Country) %>% select(., Country))),
                            multiple = F),
+            sliderInput("age", 
+                        "Age", 
+                        min = 14, 
+                        max = 60, 
+                        value = c(14, 60)),
             selectizeInput("league",
                            "League",
                            choices = c('Choose a league' = 'a', unique(df %>% arrange(., League) %>% filter(!is.na(League)) %>% select(., League))),
                            multiple = F),
             selectizeInput("club",
                            "Club",
-                           choices = c('Choose a club' = '', unique(df %>% select(., Club))),
+                           choices = c(),
                            multiple = F)
         ),
         rightSidebarTabContent(
             id = 2,
-            title = "Fepalcon",
-            icon = "fas fa-bars"
+            title = "Characteristics",
+            icon = "fas fa-bars",
+            selectizeInput("categories",
+                           "Category",
+                           choices = c('Choose a category' = 'a', names(Categories)),
+                           multiple = F),
+            selectizeInput("attribute",
+                           "Attribute",
+                           choices = c(),
+                           multiple = F)
         ),
         title = "Right Sidebar"
     ), # end right side bar
@@ -57,14 +67,13 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
     # Body -------------------------------------------------------------------------------------------
     body = dashboardBody(
         tabItems(
-            # tabItem(
-            #     tabName = "map",
-            #     
-            # )
             tabItem(
-                tabName = "players",
+                tabName = "player"
+            ),
+            tabItem(
+                tabName = "search",
                 fluidRow(box(DT::dataTableOutput("table"),
-                             width = 8))
+                             width = 12))
             )
         )
     ) # end body
