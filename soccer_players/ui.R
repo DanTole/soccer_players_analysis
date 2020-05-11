@@ -15,7 +15,7 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
             ),
             menuItem("Player", tabName = "Player", icon = icon("map")),
             menuItem("Search", tabName = "search", icon = icon("table")),
-            menuItem("")
+            menuItem("Visualization", tabName = "visu", icon = icon("fa-chart-bar"))
         )
     ), # end left side bar
     
@@ -27,17 +27,22 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
             title = "Search",
             icon = "search",
             active = TRUE,
-            checkboxInput("show_na", label = "Show NA", value = F),
+            prettyToggle(
+                inputId = "show_na",
+                label_on = "NAs keeped",
+                label_off = "NAs removed",
+                icon_on = icon("check"),
+                icon_off = icon("remove")),
             textInput("search_player",
                       "Name"),
             selectizeInput("country",
                            "Nationality",
                            choices = c('Choose a country' = 'a', unique(df %>% arrange(., Country) %>% select(., Country))),
                            multiple = F),
-            sliderInput("age", 
-                        "Age", 
-                        min = 14, 
-                        max = 60, 
+            sliderInput("age",
+                        "Age",
+                        min = 14,
+                        max = 60,
                         value = c(14, 60)),
             selectizeInput("league",
                            "League",
@@ -46,7 +51,9 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
             selectizeInput("club",
                            "Club",
                            choices = c(),
-                           multiple = F)
+                           multiple = F),
+            actionButton("reset",
+                         "Reset")
         ),
         rightSidebarTabContent(
             id = 2,
@@ -68,12 +75,25 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
     body = dashboardBody(
         tabItems(
             tabItem(
-                tabName = "player"
+                tabName = "player",
+                column(8, plotlyOutput("plot1", width = 800, height=700))
             ),
             tabItem(
                 tabName = "search",
                 fluidRow(box(DT::dataTableOutput("table"),
-                             width = 12))
+                             width = 12)),
+                tags$head(tags$script("var f_fnRowCallback = function( nRow, aData, iDisplayIndex,     iDisplayIndexFull ){
+      $('td', nRow).click( function(){Shiny.onInputChange('request_i',     [$(this).parent().index(),$(this).index()])} );
+}                                        
+
+Shiny.addCustomMessageHandler('showRequested_i', function(x) {
+
+    alert(x)
+})"))
+            ),
+            tabItem(
+              tabName = "visu",
+              plotlyOutput("plot_price"),
             )
         )
     ) # end body

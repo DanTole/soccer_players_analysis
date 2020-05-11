@@ -39,9 +39,14 @@ server = function(input, output, session) {
 
     if(input$categories != 'a')
     {
+      categ = paste(input$categories, "_agg", sep = "")
       filtered_df %>% 
         select(., Name,
-               Categories[[input$categories]])
+               Categories[[input$categories]],
+               Prediction,
+               categ,
+               'Value after 2 years' = Market.Value..Euros.) %>%
+        rename(., Aggregate = categ)
     }
     else
     {
@@ -51,6 +56,7 @@ server = function(input, output, session) {
                Country,
                League,
                Club,
+               Prediction,
                'Value after 2 years' = Market.Value..Euros.) %>%
         arrange(., by=Name)
     }
@@ -75,78 +81,109 @@ server = function(input, output, session) {
     )
   })
   
+  # Render spider graph
+  output$spider <- renderPlotly({
+    
+  })
+  
   # Render the players table
   output$table <- DT::renderDataTable({
     table = filter_df()
-
-    attr = input$attribute
     
-    if(0)
+    if(input$attribute != 'a')
     {
-      # table = table %>% mutate(.,
-      #                          attr = cell_spec(table[attr], 'html',
-      #                                             color = ifelse(1,
-      #                                                     "green",
-      #                                                     "red")))
-      datatable(table, rownames=FALSE,
-                options = list(searching = FALSE,
-                               pageLength = 20)) %>%
-        formatStyle(., attr, color = ifelse(attr > 10,
-                                      "red",
-                                      "blue"))
+      table %>%
+        select(., -Prediction,
+               -'Value after 2 years')
     }
-    else
-    {
+    
       datatable(table, rownames=FALSE,
                 options = list(searching = FALSE,
                                pageLength = 20))
-    }
+    },options =  list(
+    fnRowCallback = I("function( nRow, aData, iDisplayIndex, iDisplayIndexFull )     {f_fnRowCallback( nRow, aData, iDisplayIndex, iDisplayIndexFull ) }")))
+    
+  observe({   
+    if(!is.null(input$request_i)){
+      session$sendCustomMessage(type = "showRequested_i", paste( "row:     ",input$request_i[1]))}
   })
   
-  # Render the map (I hope it does ...)
-  output$map <- renderLeaflet({
+  get_attribute <- reactive({
+    filter_df() %>% 
+      select(., input$attribute, 'Value after 2 years')
+  })
+  
+  # Render the price plots
+  output$plot_price <- renderPlotly({
     table = filter_df()
-    if(input$categories != 'a')
+      
+    if(input$categories == 'a' & input$attribute == 'a')
     {
-      table %>% group_by(., table$Country) %>% summarise(., median())
-      leaflet(table) %>% 
-        addTiles()  %>% 
-        setView( lat=10, lng=0 , zoom=2) %>%
-        addPolygons(fillColor = ~mypalette(POP2005), stroke=FALSE )
+    pred = table %>% 
+      select(., Prediction) %>%
+      filter(., !is.na(Prediction)) %>%
+      mutate(., Prediction = log(Prediction))
+    
+    market_value = table %>%
+      select(., Value = 'Value after 2 years') %>%
+      filter(., !is.na(Value)) %>%
+      mutate(., Value = log(Value))
+    
+      density1 = density(pred$Prediction)
+      density2 = density(market_value$Value)
+      
+      fig <- plot_ly(x = ~density1$x, y = ~density1$y, type = 'scatter', mode = 'lines', name = 'Prediction', fill = 'tozeroy',
+                     fillcolor = 'rgba(168, 216, 234, 0.5)',
+                     line = list(width = 0.5)) %>%
+        add_trace(x = ~density2$x, y = ~density2$y, name = 'Market value', fill = 'tozeroy',
+                  fillcolor = 'rgba(255, 212, 96, 0.5)') %>%
+        layout(xaxis = list(title = 'Value'),
+               yaxis = list(title = 'Density'))
+      
+      fig
     }
-  else
-  {
-    palette = "Reds"
-    x = table$Market.Value..Euros.
-    
-    list_nations <- map_data("world", region = table$Country)
+    else if(input$attribute != 'a')
+    {
+      attr = input$attribute
+      
+      pred = table %>% 
+        select(., input$attribute, Prediction) %>%
+        filter(., !is.na(Prediction)) %>%
+        mutate(., Prediction = log(Prediction))
+      
+      market_value = get_attribute() %>%
+        rename(., Value = 'Value after 2 years') %>%
+        filter(., !is.na(Value)) %>%
+        mutate(., Value = log(Value))
+      
+      # fig <- plot_ly(get_attribute(), x = ~names(market_value)[1], y = ~Value, name = "Value", type = "scatter") %>%
+      fig <- plot_ly(market_value, x = ~jitter(market_value[[1]], factor=3), y = ~market_value[[2]], name = "Value", type = "scatter") %>%
+        # add_trace(market_value, x = ~input$attribute, y = ~market_value, name = "Market value") %>%
+        layout(yaxis = list(title = "Value"))
 
-    region.lab.data <- list_nations %>%
-    group_by(region) %>%
-    summarise(long = mean(long), lat = mean(lat))
-    
-    leaflet(table) %>%
-      addTiles(., group = "region.lab.data") %>%
-      addProviderTiles("Stamen.Toner", group = "Toner") %>%
-      addProviderTiles("Stamen.TonerLite", group = "Toner Lite") %>%
-      addProviderTiles("CartoDB.Positron", group = "CartoDB") %>%
-      addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 0.8, color = ~pal(x)) %>%
-      addLegend("bottomright", pal = pal, values = ~x, title = legend.title, labFormat = labelFormat(suffix = ""), opacity = 0.3) %>%
-      addLayersControl(baseGroups = c("OSM (default)", "Toner", "Toner Lite", "CartoDB"),options = layersControlOptions(collapsed = FALSE))
-    
-    # ctry = unique(df$Country)
-    # 
-    # table = table %>% 
-    #   group_by(., Country) %>%
-    #   summarise(., median(input$attribute))
-    # 
-    # ggplot(list_nations, aes(x = long, y = lat)) +
-    #   geom_polygon(aes(group = group, fill = region)) +
-    #   geom_text(aes(label = region), data = region.lab.data,  size = 3, hjust = 0.5) +
-    #   scale_fill_viridis_d() +
-    #   theme_void() +
-    #   theme(legend.position = "none")
-  }
+      fig
+    }
+    else if(input$categories != 'a')
+    {
+      # Categ = paste(input$categories, "_agg", sep = "")
+      
+      pred = table %>%
+        select(., Aggregate, Prediction) %>%
+        filter(., !is.na(Prediction)) %>%
+        mutate(., Prediction = log(Prediction))
+      
+      market_value = table %>%
+        select(., Aggregate, Value = 'Value after 2 years') %>%
+        filter(., !is.na(Value)) %>%
+        mutate(., Value = log(Value))
+
+      fig <- plot_ly(market_value, x = ~jitter(Aggregate, factor = 3), y = ~Value, name = "Value", type = "scatter") %>%
+        # add_trace(pred, x = ~jitter(Aggregate, factor = 3), y = ~Prediction, name = "Prediction", type = "scatter") %>%
+        layout(xaxis = list(title = input$categories),
+               yaxis = list(title = "Value"))
+      
+      fig
+    }
   })
 }
 
