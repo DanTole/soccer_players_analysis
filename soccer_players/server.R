@@ -43,8 +43,8 @@ server = function(input, output, session) {
       filtered_df %>% 
         select(., Name,
                Categories[[input$categories]],
-               Prediction,
                categ,
+               Prediction,
                'Value after 2 years' = Market.Value..Euros.) %>%
         rename(., Aggregate = categ)
     }
@@ -82,8 +82,33 @@ server = function(input, output, session) {
   })
   
   # Render spider graph
-  output$spider <- renderPlotly({
-    
+  get_aggreg <- reactive({
+    df %>%
+      filter(., grepl(tolower(input$search_player), Name)) %>%
+      select(., Name, contains("_agg") & !contains("Other"))
+  })
+  
+  output$plotspider <- renderPlotly({
+    s <- plot_ly(
+      type = 'scatterpolar',
+      mode = "closest",
+      fill = 'toself') %>%
+      add_trace(
+        r = as.matrix(get_aggreg()[1,2:9]),
+        theta = c("Physical", "Technical", "Shooting", "Mental", "Tactical", "Personality", "Goal", "Defense"),
+        showlegend = TRUE,
+        mode = "markers",
+        name = get_aggreg()[1,1]) %>%
+      layout(
+        polar = list(
+          radialaxis = list(
+            visible = T,
+            range = c(0,20)
+          )
+        ),
+        showlegend=TRUE
+      )
+    s
   })
   
   # Render the players table
@@ -108,12 +133,12 @@ server = function(input, output, session) {
       session$sendCustomMessage(type = "showRequested_i", paste( "row:     ",input$request_i[1]))}
   })
   
+  # Render the price plots
   get_attribute <- reactive({
     filter_df() %>% 
       select(., input$attribute, 'Value after 2 years')
   })
   
-  # Render the price plots
   output$plot_price <- renderPlotly({
     table = filter_df()
       
@@ -156,7 +181,6 @@ server = function(input, output, session) {
         filter(., !is.na(Value)) %>%
         mutate(., Value = log(Value))
       
-      # fig <- plot_ly(get_attribute(), x = ~names(market_value)[1], y = ~Value, name = "Value", type = "scatter") %>%
       fig <- plot_ly(market_value, x = ~jitter(market_value[[1]], factor=3), y = ~market_value[[2]], name = "Value", type = "scatter") %>%
         # add_trace(market_value, x = ~input$attribute, y = ~market_value, name = "Market value") %>%
         layout(yaxis = list(title = "Value"))

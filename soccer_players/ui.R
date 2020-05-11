@@ -1,7 +1,7 @@
 
 # --------------------------------------------------------------------------------
 
-ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboardPagePlus(
+ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPagePlus(
     header = dashboardHeaderPlus(
         enable_rightsidebar = TRUE,
         rightSidebarIcon = "gears"
@@ -13,9 +13,10 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
             sidebarUserPanel(
                 "Dan Toledano"
             ),
-            menuItem("Player", tabName = "Player", icon = icon("map")),
+            menuItem("Player", tabName = "player", icon = icon("map")),
             menuItem("Search", tabName = "search", icon = icon("table")),
-            menuItem("Visualization", tabName = "visu", icon = icon("fa-chart-bar"))
+            menuItem("Visualization", tabName = "visu", icon = icon("fas fa-chart-bar")),
+            menuItem("About the author", tabName = "me", icon = icon("fas fa-futbol"))
         )
     ), # end left side bar
     
@@ -51,9 +52,7 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
             selectizeInput("club",
                            "Club",
                            choices = c(),
-                           multiple = F),
-            actionButton("reset",
-                         "Reset")
+                           multiple = F)
         ),
         rightSidebarTabContent(
             id = 2,
@@ -76,8 +75,19 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-closed", dashboard
         tabItems(
             tabItem(
                 tabName = "player",
-                column(8, plotlyOutput("plot1", width = 800, height=700))
+                # box(selectizeInput("compare",
+                #                "Select up to 10 players",
+                #                choices = c("", df %>% select(Name)),
+                #                multiple = T,
+                #                options = list(maxItems = 10))),
+                column(8, selectizeInput("compare",
+                                         "Select up to 10 players",
+                                         choices = c("", df %>% select(Name)),
+                                         multiple = T,
+                                         options = list(maxItems = 10))),
+                column(8, plotlyOutput("plotspider", width = 800, height=700))
             ),
+            
             tabItem(
                 tabName = "search",
                 fluidRow(box(DT::dataTableOutput("table"),
@@ -93,7 +103,8 @@ Shiny.addCustomMessageHandler('showRequested_i', function(x) {
             ),
             tabItem(
               tabName = "visu",
-              plotlyOutput("plot_price"),
+              h1("How does a player value depends on his characteristics ?"),
+              plotlyOutput("plot_price")
             )
         )
     ) # end body

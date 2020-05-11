@@ -127,28 +127,6 @@ data_pred = df %>%
   mutate(., log_price = log(Market.Value..Euros.)) %>%
   select(., Physical, Technical, Shooting, Defense, Mental, Tactical, Personality, Positioning, Other, Goal, Age, Height, Weight, log_price)
 
-# data_train = data_pred %>%
-#   filter(., !is.na(log_price))
-
-# smp_size <- floor(0.75 * nrow(data_train))
-# 
-# set.seed(42)
-# train_ind <- sample(seq_len(nrow(data_train)), size = smp_size)
-# 
-# data_train <- data_train[train_ind, ]
-# data_test <- data_train[-train_ind, ]
-# 
-# 
-# X_train = data_train %>%
-#   select(., -Market.Value..Euros.)
-# Y_train = data_train %>%
-#   mutate(., log_price = log(Market.Value..Euros.)) %>%
-#   select(., Market.Value..Euros.)
-# X_test = data_test %>%
-#   select(., -Market.Value..Euros.)
-# Y_test = data_test %>%
-#   mutate(., log_price = log(Market.Value..Euros.)) %>%
-#   select(., Market.Value..Euros.)
 features = data_pred %>% select(., -log_price)
 
 model_= paste("data_pred$", names(features), sep = "", collapse=" + ")
@@ -166,38 +144,5 @@ df = df %>%
   mutate(., Prediction = round(Prediction_list))
 
 density1 = density(Prediction_list)
-
-fig <- plot_ly(x = ~density1$x, y = ~density1$y, type = 'scatter', mode = 'lines', name = 'Prediction', fill = 'tozeroy',
-               fillcolor = 'rgba(168, 216, 234, 0.5)',
-               line = list(width = 0.5))
-fig
-
-density(df$Height)
-# -----------------------------------------------------
-
-# # Retrievethe map data
-#  some.eu.maps <- map_data("world", region = countries$country)
-# 
-# # Compute the centroid as the mean longitude and lattitude
-# # Used as label coordinate for country's names
-# 
-# region.lab.data <- some.eu.maps %>%
-#    group_by(region) %>%
-#    summarise(long = mean(long), lat = mean(lat))
-# 
-# ggplot(some.eu.maps, aes(x = long, y = lat)) +
-#    geom_polygon(aes( group = group, fill = region))+
-#    geom_text(aes(label = region), data = region.lab.data,  size = 3, hjust = 0.5)+
-#    scale_fill_viridis_d()+
-#    theme_void()+
-#    theme(legend.position = "none")
-
-# -----------------------------------------------------
-
-# df %>% filter(., !is.na(Market.Value..Euros.))
- 
-# notInfm = values_df %>% 
-#   left_join(., fm_df, by = c("Name", "Birth.Date")) %>% 
-#   filter(., is.na(CommandOfArea))
 
 
