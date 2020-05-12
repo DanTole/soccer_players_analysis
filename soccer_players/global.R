@@ -14,6 +14,7 @@ library(kableExtra)
 library(shinyjs)
 library(fmsb)
 library(plotly)
+library(ggbiplot)
 theme_set(
   theme_void()
 )
@@ -146,7 +147,7 @@ text = paste("data_pred$log_price ~" , model_)
 
 # data_train = data_pred
 
-lin = lm(text, method = "qr")
+lin = lm(text)
 
 Prediction_list = predict(lin, data_pred)
 Prediction_list = exp(Prediction_list)
@@ -156,7 +157,9 @@ Prediction_list[[1]]
 df = df %>%
   mutate(., Prediction = round(Prediction_list))
 
-density1 = density(Prediction_list)
+# density1 = density(Prediction_list)
 
+# km = kmeans(features[1:40000,], center = )
+# 
 # features.pca = prcomp(features[1:40000,], center = TRUE,scale. = TRUE)
-# ggbiplot(features.pca, groups = )
+# ggbiplot(features.pca, groups = km$cluster)

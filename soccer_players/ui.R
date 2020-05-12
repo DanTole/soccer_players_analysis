@@ -14,9 +14,10 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
                 "Dan Toledano"
             ),
             menuItem("Description", tabName = "descr", icon = icon("fas fa-home")),
-            menuItem("Search", tabName = "search", icon = icon("table")),
-            menuItem("Player", tabName = "player", icon = icon("fas fa-running")),
+            # menuItem("Player", tabName = "player", icon = icon("fas fa-user")),
             menuItem("Visualization", tabName = "visu", icon = icon("fas fa-chart-bar")),
+            menuItem("Search", tabName = "search", icon = icon("table")),
+            menuItem("Clusters", tabName = "clusters", icon = icon("fas fa-braille")),
             menuItem("About the author", tabName = "me", icon = icon("fas fa-futbol"))
         )
     ), # end left side bar
@@ -115,6 +116,24 @@ Shiny.addCustomMessageHandler('showRequested_i', function(x) {
   alert(x)
 })"))
           ),
+          
+          tabItem(
+            tabName = "clusters",
+            box(title = "How many groups can we form within the players ?",
+                p("Deciding which position is best for a player is a difficult decision, that migth even change with time knowing that each player is evolving in a different way.
+                  Being able to find in which group a player is with its attributes is then an important question. We are trying here to clusterize the dataset with a k-means algorithms.
+                  We then apply a PCA to reduce the dimension in order to being able to visualize the result."),
+              width = 12,
+              sliderInput("K",
+                          "Number of clusters",
+                          min = 1,
+                          max = 14,
+                          value = 1
+              ),
+              column(12, align="center", plotOutput("clusters_plot", width = 800, height = 700))
+            )
+          ),
+          
           tabItem(
             tabName = "visu",
             h1("How does a player value depends on his characteristics ?"),

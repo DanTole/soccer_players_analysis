@@ -242,6 +242,33 @@ server = function(input, output, session) {
          height = 300,
          alt = "This is alternate text")
   }, deleteFile = TRUE)
+  
+  # Plot clusters
+  output$clusters_plot <- renderPlot({
+    df_clusters = df %>%
+      select(., UID, Physical, Technical, Shooting, Defense, Tactical, Personality, Other, Goal)
+    
+    set.seed(11)
+    #Create training set
+    train <- df_clusters %>% sample_frac(.70)
+    #Create test set
+    test  <- anti_join(df_clusters, train, by = 'UID') %>%
+      select(., -UID)
+    
+    train = train %>%
+      select(., -UID)
+    
+    km = kmeans(train, centers = input$K)
+      
+    features.pca = prcomp(train, center = TRUE,scale. = FALSE)
+    ggbiplot(features.pca, groups = km$cluster, ellipse = TRUE, circle = TRUE) +
+      theme(legend.direction = 'horizontal', legend.position = 'top')
+    
+    # ggbiplot(wine.pca, obs.scale = 1, var.scale = 1,
+    #          groups = wine.class, ellipse = TRUE, circle = TRUE) +
+    #   scale_color_discrete(name = '') +
+    #   theme(legend.direction = 'horizontal', legend.position = 'top')
+  })
 }
 
 
