@@ -94,8 +94,19 @@ date_ref = dmy("01/01/2017")
 
 df = df %>% mutate(., Age = floor(as.numeric(as.duration(interval(start = Birth.Date, end = date_ref)))/(3600*24*365)))
 
+# Position feature
+clean_position <- function(position)
+{
+  sapply(strsplit(position, " "), "[", 1)
+}
+
+df = df %>%
+  mutate(., Position = clean_position(PositionsDesc))
+
+list_position = c("DM", "GK", "S", "M", "D", "AM", "WB", "C")
+
 # Not so lazy categorization of attributes (by hand)
-Physical = c('AerialAbility', 'Heading', 'Acceleration', 'Jumping', 'NaturalFitness', 'Pace', 'Stamina', 'Strength', 'InjuryProness')
+Physical = c('Heading', 'Acceleration', 'Jumping', 'NaturalFitness', 'Pace', 'Stamina', 'Strength', 'InjuryProness')
 Technical = c('Corners', 'Crossing', 'Passing', 'Balance', 'Dribbling', 'FirstTouch', 'Technique', 'Agility')
 Shooting = c('Finishing', 'LongShots', 'PenaltyTaking', 'Freekicks')
 Other = c('Longthrows', 'RightFoot', 'LeftFoot', 'Dirtiness')
@@ -104,7 +115,7 @@ Mental = c('Bravery', 'Composure', 'Concentration', 'Determination', 'Flair', 'L
 Tactical = c('Vision', 'Decisions', 'CommandOfArea', 'OffTheBall', 'Positioning', 'Teamwork', 'Workrate')
 Personality = c('Versatility', 'Adaptability', 'Ambition', 'Loyalty', 'Pressure', 'Professional', 'Sportsmanship', 'Temperament', 'Controversy')
 Goal = c('Communication', 'Eccentricity', 'Handling', 'Kicking', 'OneOnOnes', 'Reflexes', 'RushingOut', 'TendencyToPunch', 'Throwing')
-Positioning = c('Goalkeeper', 'Sweeper', 'Striker', 'AttackingMidCentral', 'AttackingMidLeft', 'AttackingMidRight', 'DefenderCentral', 'DefenderLeft', 'DefenderRight', 'DefensiveMidfielder', 'MidfielderCentral', 'MidfielderLeft', 'MidfielderRight', 'WingBackLeft', 'WingBackRight')
+Positioning = c('AerialAbility', 'Goalkeeper', 'Sweeper', 'Striker', 'AttackingMidCentral', 'AttackingMidLeft', 'AttackingMidRight', 'DefenderCentral', 'DefenderLeft', 'DefenderRight', 'DefensiveMidfielder', 'MidfielderCentral', 'MidfielderLeft', 'MidfielderRight', 'WingBackLeft', 'WingBackRight')
 
 Categories = list(Physical, Technical, Shooting, Other, Defense, Mental, Tactical, Personality, Goal)
 
@@ -135,7 +146,9 @@ text = paste("data_pred$log_price ~" , model_)
 
 # data_train = data_pred
 
-Prediction_list = predict(lm(text, method = "qr"), data_pred)
+lin = lm(text, method = "qr")
+
+Prediction_list = predict(lin, data_pred)
 Prediction_list = exp(Prediction_list)
 
 Prediction_list[[1]]
@@ -145,4 +158,5 @@ df = df %>%
 
 density1 = density(Prediction_list)
 
-
+# features.pca = prcomp(features[1:40000,], center = TRUE,scale. = TRUE)
+# ggbiplot(features.pca, groups = )

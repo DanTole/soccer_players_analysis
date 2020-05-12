@@ -13,8 +13,9 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
             sidebarUserPanel(
                 "Dan Toledano"
             ),
-            menuItem("Player", tabName = "player", icon = icon("map")),
+            menuItem("Description", tabName = "descr", icon = icon("fas fa-home")),
             menuItem("Search", tabName = "search", icon = icon("table")),
+            menuItem("Player", tabName = "player", icon = icon("fas fa-running")),
             menuItem("Visualization", tabName = "visu", icon = icon("fas fa-chart-bar")),
             menuItem("About the author", tabName = "me", icon = icon("fas fa-futbol"))
         )
@@ -58,6 +59,10 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
             id = 2,
             title = "Characteristics",
             icon = "fas fa-bars",
+            selectizeInput("position",
+                           "Position",
+                           choices = c("Choose position" = "a", list_position),
+                           multiple = F),
             selectizeInput("categories",
                            "Category",
                            choices = c('Choose a category' = 'a', names(Categories)),
@@ -73,39 +78,58 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
     # Body -------------------------------------------------------------------------------------------
     body = dashboardBody(
         tabItems(
-            tabItem(
-                tabName = "player",
-                # box(selectizeInput("compare",
-                #                "Select up to 10 players",
-                #                choices = c("", df %>% select(Name)),
-                #                multiple = T,
-                #                options = list(maxItems = 10))),
-                column(8, selectizeInput("compare",
-                                         "Select up to 10 players",
-                                         choices = c("", df %>% select(Name)),
-                                         multiple = T,
-                                         options = list(maxItems = 10))),
-                column(8, plotlyOutput("plotspider", width = 800, height=700))
+          tabItem(
+            tabName = "descr",
+            h1("Football players value analysis and prediction."),
+            box(
+              h3("Football manager, a great data collection."),
+              p("The data used in this app was collected by Sega for the devellopement of their franchise Football manager. FM is a simulation game letting you play in the role of the manager/director of a club.
+                They have been working on collecting a huge amount of data on soccer players all over the world, from the highest to the lowest divisions. It is regularly used by recruiters to find promising young players.
+                The data for each players is separated in a few categories such that : technical, mental and physical and some hidden variables relative to the personality of the player and it's prefered positionings on the field. Each one of them including up to 14 different attributes.
+                They were collected from the 2017 version on the game, meaning they were last updated in the beggining 2017.
+                This first dataset was joined with a second dataset including a list of players and their market valuation during the 2019 summer transfer period.")
             ),
+            box(
+              h3("Objective."),
+              p("The dataset consist of players and their characteristics in the beginning of 2017, and the value of a subset of these players during summer 2019.
+                Are we able to predict the value of players given their FM characteristics ? If so, what will make a player valuable ?
+                These questions are very complex and depends on many variables. We are trying to give a sketch of understanding with this app.")
+            )
+          ),
+          tabItem(
+              tabName = "player",
+
+              column(8, plotlyOutput("plotspider", width = 800, height=700))
+          ),
             
-            tabItem(
-                tabName = "search",
-                fluidRow(box(DT::dataTableOutput("table"),
-                             width = 12)),
-                tags$head(tags$script("var f_fnRowCallback = function( nRow, aData, iDisplayIndex,     iDisplayIndexFull ){
-      $('td', nRow).click( function(){Shiny.onInputChange('request_i',     [$(this).parent().index(),$(this).index()])} );
+          tabItem(
+              tabName = "search",
+              fluidRow(box(DT::dataTableOutput("table"),
+                           width = 12)),
+              tags$head(tags$script("var f_fnRowCallback = function( nRow, aData, iDisplayIndex,     iDisplayIndexFull ){
+    $('td', nRow).click( function(){Shiny.onInputChange('request_i',     [$(this).parent().index(),$(this).index()])} );
 }                                        
 
 Shiny.addCustomMessageHandler('showRequested_i', function(x) {
 
-    alert(x)
+  alert(x)
 })"))
-            ),
-            tabItem(
-              tabName = "visu",
-              h1("How does a player value depends on his characteristics ?"),
+          ),
+          tabItem(
+            tabName = "visu",
+            h1("How does a player value depends on his characteristics ?"),
+            
+            box(status = "primary",
+              title = "Graph",
               plotlyOutput("plot_price")
+            ),
+            
+            box(
+              title = "Linear model", status = "warning",
+              collapsible = T, collapsed = T,
+              verbatimTextOutput("linear_model")
             )
+          )
         )
     ) # end body
     

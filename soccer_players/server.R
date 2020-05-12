@@ -36,6 +36,13 @@ server = function(input, output, session) {
         filtered_df = filtered_df %>% filter(., League == input$league)
       }
     }
+    
+    # Filter position
+    if(input$position != 'a')
+    {
+      filtered_df = filtered_df %>%
+        filter(., input$position == strsplit(Position, "/"))
+    }
 
     if(input$categories != 'a')
     {
@@ -46,13 +53,14 @@ server = function(input, output, session) {
                categ,
                Prediction,
                'Value after 2 years' = Market.Value..Euros.) %>%
-        rename(., Aggregate = categ)
+        dplyr::rename(., Aggregate = categ)
     }
     else
     {
       filtered_df %>%
         select(., Name,
                Age,
+               Position,
                Country,
                League,
                Club,
@@ -177,13 +185,14 @@ server = function(input, output, session) {
         mutate(., Prediction = log(Prediction))
       
       market_value = get_attribute() %>%
-        rename(., Value = 'Value after 2 years') %>%
+        dplyr::rename(., Value = 'Value after 2 years') %>%
         filter(., !is.na(Value)) %>%
         mutate(., Value = log(Value))
       
       fig <- plot_ly(market_value, x = ~jitter(market_value[[1]], factor=3), y = ~market_value[[2]], name = "Value", type = "scatter") %>%
         # add_trace(market_value, x = ~input$attribute, y = ~market_value, name = "Market value") %>%
-        layout(yaxis = list(title = "Value"))
+        layout(xaxis = list(title = attr),
+                            yaxis = list(title = "Value"))
 
       fig
     }
@@ -209,6 +218,30 @@ server = function(input, output, session) {
       fig
     }
   })
+  
+  output$linear_model <- renderPrint({
+    summary(lin)
+  })
+  
+  output$clusters <- renderPlotly({
+    features.pca = prcomp(features[1:20000,], center = TRUE,scale. = TRUE)
+    ggbiplot(features.pca)
+  })
+  
+  output$messi <- renderImage({
+    outfile <- tempfile(fileext = '.png')
+    
+    png(outfile, width = 400, height = 300)
+    hist(rnorm(input$obs), main = "Generated in renderImage()")
+    dev.off()
+    
+    # Return a list containing the filename
+    list(src = outfile,
+         contentType = 'image/png',
+         width = 400,
+         height = 300,
+         alt = "This is alternate text")
+  }, deleteFile = TRUE)
 }
 
 
