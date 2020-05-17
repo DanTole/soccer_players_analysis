@@ -19,9 +19,9 @@ theme_set(
   theme_void()
 )
 
-fm_df = read.csv('/home/dantole/Desktop/NYCDSA/Project_2/soccer/players_fm.csv', header = TRUE, stringsAsFactors = FALSE)
+fm_df = read.csv('/home/dantole/Desktop/NYCDSA/Project_2/soccer/soccer_players_analysis/players_fm.csv', header = TRUE, stringsAsFactors = FALSE)
 
-values_df = read.csv('/home/dantole/Desktop/NYCDSA/Project_2/soccer/European_Rosters.csv', header = TRUE, stringsAsFactors = FALSE)
+values_df = read.csv('/home/dantole/Desktop/NYCDSA/Project_2/soccer/soccer_players_analysis/European_Rosters.csv', header = TRUE, stringsAsFactors = FALSE)
 
 fm_df = fm_df %>%
   select(., -Age, -IntCaps, -IntGoals, Birth.Date = Born)
@@ -83,7 +83,7 @@ df = fm_df %>%
 # -----------------------------------------------------
 
 # Nation ID's
-countries = read.delim('/home/dantole/Desktop/NYCDSA/Project_2/soccer/countries.txt', header = FALSE, col.names = c('NationID', 'Country'), sep = ',', stringsAsFactors = FALSE)
+countries = read.delim('/home/dantole/Desktop/NYCDSA/Project_2/soccer/soccer_players_analysis/countries.txt', header = FALSE, col.names = c('NationID', 'Country'), sep = ',', stringsAsFactors = FALSE)
 
 # Tranform nationID format to couontry name
 df = df %>% left_join(., countries, by="NationID")
