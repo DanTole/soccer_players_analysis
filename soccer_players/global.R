@@ -5,6 +5,7 @@ library(shinydashboardPlus)
 library(lubridate)
 library(ggplot2)
 library(DT)
+library(caret)
 library(maps)
 library(viridis)
 library(leaflet)
@@ -19,9 +20,9 @@ theme_set(
   theme_void()
 )
 
-fm_df = read.csv('/home/dantole/Desktop/NYCDSA/Project_2/soccer/soccer_players_analysis/players_fm.csv', header = TRUE, stringsAsFactors = FALSE)
+fm_df = read.csv('./data/players_fm.csv', header = TRUE, stringsAsFactors = FALSE)
 
-values_df = read.csv('/home/dantole/Desktop/NYCDSA/Project_2/soccer/soccer_players_analysis/European_Rosters.csv', header = TRUE, stringsAsFactors = FALSE)
+values_df = read.csv('./data/European_Rosters.csv', header = TRUE, stringsAsFactors = FALSE)
 
 fm_df = fm_df %>%
   select(., -Age, -IntCaps, -IntGoals, Birth.Date = Born)
@@ -83,7 +84,10 @@ df = fm_df %>%
 # -----------------------------------------------------
 
 # Nation ID's
-countries = read.delim('/home/dantole/Desktop/NYCDSA/Project_2/soccer/soccer_players_analysis/countries.txt', header = FALSE, col.names = c('NationID', 'Country'), sep = ',', stringsAsFactors = FALSE)
+countries = read.delim('./data/countries.txt',
+                       header = FALSE, 
+                       col.names = c('NationID', 'Country'), 
+                       sep = ',', stringsAsFactors = FALSE)
 
 # Tranform nationID format to couontry name
 df = df %>% left_join(., countries, by="NationID")
@@ -116,7 +120,8 @@ Mental = c('Bravery', 'Composure', 'Concentration', 'Determination', 'Flair', 'L
 Tactical = c('Vision', 'Decisions', 'CommandOfArea', 'OffTheBall', 'Positioning', 'Teamwork', 'Workrate')
 Personality = c('Versatility', 'Adaptability', 'Ambition', 'Loyalty', 'Pressure', 'Professional', 'Sportsmanship', 'Temperament', 'Controversy')
 Goal = c('Communication', 'Eccentricity', 'Handling', 'Kicking', 'OneOnOnes', 'Reflexes', 'RushingOut', 'TendencyToPunch', 'Throwing')
-Positioning = c('AerialAbility', 'Goalkeeper', 'Sweeper', 'Striker', 'AttackingMidCentral', 'AttackingMidLeft', 'AttackingMidRight', 'DefenderCentral', 'DefenderLeft', 'DefenderRight', 'DefensiveMidfielder', 'MidfielderCentral', 'MidfielderLeft', 'MidfielderRight', 'WingBackLeft', 'WingBackRight')
+Positioning = c('AerialAbility', 'Goalkeeper', 'Sweeper', 'Striker', 'AttackingMidCentral', 'AttackingMidLeft', 'AttackingMidRight', 'DefenderCentral', 
+                'DefenderLeft', 'DefenderRight', 'DefensiveMidfielder', 'MidfielderCentral', 'MidfielderLeft', 'MidfielderRight', 'WingBackLeft', 'WingBackRight')
 
 Categories = list(Physical, Technical, Shooting, Other, Defense, Mental, Tactical, Personality, Goal)
 
@@ -135,7 +140,7 @@ df = df %>% mutate(., Physical_agg = floor(rowMeans(df[Physical])),
 # -----------------------------------------------------
 
 # Predicting prices
-data_pred = df %>% 
+data_pred = df %>%
   mutate(., log_price = log(Market.Value..Euros.)) %>%
   select(., Physical, Technical, Shooting, Defense, Mental, Tactical, Personality, Positioning, Other, Goal, Age, Height, Weight, log_price)
 
@@ -156,10 +161,3 @@ Prediction_list[[1]]
 
 df = df %>%
   mutate(., Prediction = round(Prediction_list))
-
-# density1 = density(Prediction_list)
-
-# km = kmeans(features[1:40000,], center = )
-# 
-# features.pca = prcomp(features[1:40000,], center = TRUE,scale. = TRUE)
-# ggbiplot(features.pca, groups = km$cluster)

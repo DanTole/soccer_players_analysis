@@ -3,6 +3,7 @@
 
 ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPagePlus(
     header = dashboardHeaderPlus(
+        title = "Soccer players",
         enable_rightsidebar = TRUE,
         rightSidebarIcon = "gears"
     ),
@@ -14,7 +15,6 @@ ui <- tags$body(class="skin-blue sidebar-mini control-sidebar-open", dashboardPa
                 "Dan Toledano"
             ),
             menuItem("Description", tabName = "descr", icon = icon("fas fa-home")),
-            # menuItem("Player", tabName = "player", icon = icon("fas fa-user")),
             menuItem("Visualization", tabName = "visu", icon = icon("fas fa-chart-bar")),
             menuItem("Search", tabName = "search", icon = icon("table")),
             menuItem("Clusters", tabName = "clusters", icon = icon("fas fa-braille")),
